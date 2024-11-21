@@ -1,14 +1,23 @@
 import TodoItem from "./TodoItem";
 import "../styles/TodoList.scss";
 
-const TodoList = () => {
+interface Task {
+  id: number;
+  text: string;
+  completed: boolean;
+}
+
+interface TodoListProps {
+  tasks: Task[];
+  toggleTask: (id: number) => void;
+}
+
+const TodoList: React.FC<TodoListProps> = ({ tasks, toggleTask }) => {
   return (
     <div className="tasks-list">
-      <TodoItem completed={true} text="прочитать книгу" />
-      <TodoItem completed={false} text="монтаж видео" />
-      <TodoItem completed={false} text="сходить в кино" />
-      <TodoItem completed={false} text="купить фрукты" />
-      <TodoItem completed={false} text="пойти в тренажёрный зал" />
+      {tasks.map((task) => (
+        <TodoItem key={task.id} task={task} toggleTask={toggleTask} />
+      ))}
     </div>
   );
 };
