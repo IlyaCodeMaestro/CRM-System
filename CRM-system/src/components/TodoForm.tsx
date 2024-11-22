@@ -7,21 +7,11 @@ interface TodoFormProps {
 
 const TodoForm: React.FC<TodoFormProps> = ({ addTask }) => {
   const [newTask, setNewTask] = useState("");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
-
-    if (newTask.trim().length < 2 || newTask.length > 64) {
-      setError("Задача должна содержать от 2 до 64 символов");
-      return;
-    }
     addTask(newTask);
     setNewTask("");
-    setSuccess("Задача успешно создана в системе");
   };
 
   return (
@@ -37,10 +27,9 @@ const TodoForm: React.FC<TodoFormProps> = ({ addTask }) => {
       <button type="submit" className="add-button">
         Add
       </button>
-      {error && <div className="error-message">{error}</div>}
-      {success && <div className="success-message">{success}</div>}
     </form>
   );
 };
 
 export default TodoForm;
+

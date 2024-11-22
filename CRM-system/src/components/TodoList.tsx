@@ -10,13 +10,26 @@ interface Task {
 interface TodoListProps {
   tasks: Task[];
   toggleTask: (id: number) => void;
+  updateTaskText: (id: number, newText: string) => void;
+  deleteTask: (id: number) => void;
 }
 
-const TodoList: React.FC<TodoListProps> = ({ tasks, toggleTask }) => {
+const TodoList: React.FC<TodoListProps> = ({
+  tasks,
+  toggleTask,
+  updateTaskText,
+  deleteTask,
+}) => {
   return (
     <div className="tasks-list">
       {tasks.map((task) => (
-        <TodoItem key={task.id} task={task} toggleTask={toggleTask} />
+        <TodoItem
+          key={task.id}
+          task={task}
+          toggleTask={toggleTask}
+          updateTaskText={updateTaskText}
+          deleteTask={deleteTask}
+        />
       ))}
     </div>
   );
