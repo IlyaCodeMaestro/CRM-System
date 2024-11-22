@@ -18,6 +18,9 @@ const App = () => {
     { id: 4, text: "купить фрукты", completed: false },
     { id: 5, text: "пойти в тренажёрный зал", completed: false },
   ]);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
   const toggleTask = (id: number) => {
     setTasks((prevTasks) =>
       prevTasks.map((task) =>
@@ -27,21 +30,50 @@ const App = () => {
   };
 
   const addTask = (text: string) => {
+    if (text.trim().length < 2 || text.length > 64) {
+      setError("Задача должна содержать от 2 до 64 символов");
+      setSuccess("");
+      return;
+    }
     const newTask: Task = {
       id: Date.now(),
-      text:text,
-      completed:false
+      text: text,
+      completed: false
     }
-    setTasks(prevTasks => [...prevTasks, newTask])
+    setTasks(prevTasks => [...prevTasks, newTask]);
+    setSuccess("Задача успешно создана в системе");
+    setError("");
+    setTimeout(() => {setError("")},2000)
+    // Почему не работает для двух функций?
+    setTimeout(()=> {setSuccess("")},2000)
   }
+
+  const updateTaskText = (id: number, newText: string) => {
+    setTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task.id === id ? { ...task, text: newText } : task
+      )
+    );
+  };
+
+  const deleteTask = (id: number) => {
+    console.log("Удалённое задание с айдишником:", id);
+    setTasks((prevTasks) => prevTasks.filter((task) => task.id !== id));
+  };
 
   return (
     <div className="todo-app">
       <TodoForm addTask={addTask}/>
-      <TodoTabs />
-      <TodoList tasks={tasks} toggleTask={toggleTask} />
+      <TodoTabs error={error} success={success} />
+      <TodoList 
+        tasks={tasks} 
+        toggleTask={toggleTask} 
+        updateTaskText={updateTaskText}
+        deleteTask={deleteTask}
+      />
     </div>
   );
 };
 
 export default App;
+
