@@ -1,17 +1,22 @@
+import React, { useState } from "react";
 import "../styles/TodoForm.scss";
-import { useState } from "react";
 
 interface TodoFormProps {
-  addTask: (text: string) => void;
+  addTask: (text: string) => Promise<void>;
 }
 
 const TodoForm: React.FC<TodoFormProps> = ({ addTask }) => {
   const [newTask, setNewTask] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    addTask(newTask);
-    setNewTask("");
+    if (newTask.trim()) {
+      setIsSubmitting(true);
+      await addTask(newTask);
+      setNewTask("");
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -20,16 +25,16 @@ const TodoForm: React.FC<TodoFormProps> = ({ addTask }) => {
         type="text"
         value={newTask}
         onChange={(e) => setNewTask(e.target.value)}
-        placeholder="Task To Be Done..."
+        placeholder="Введите новую задачу..."
         className="task-input"
+        disabled={isSubmitting}
         required
       />
-      <button type="submit" className="add-button">
-        Add
+      <button type="submit" className="add-button" disabled={isSubmitting}>
+        {isSubmitting ? "Добавление..." : "Добавить"}
       </button>
     </form>
   );
 };
 
 export default TodoForm;
-

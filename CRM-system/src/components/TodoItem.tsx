@@ -1,20 +1,17 @@
 import "../styles/TodoItem.scss";
 import { useState } from "react";
-interface Task {
-  id: number;
-  completed: boolean;
-  text: string;
-}
+import { Todo } from '../types/todo';
+
 interface TodoItemProps {
-  task: Task;
-  toggletask: (id: number) => void;
+  task: Todo;
+  toggleTask: (id: number) => void;
   updateTaskText: (id: number, newText: string) => void;
   deleteTask: (id: number) => void;
 }
 
-const TodoItem: React.FC<TodoItemProps> = ({ task, toggleTask,updateTaskText, deleteTask }) => {
+const TodoItem: React.FC<TodoItemProps> = ({ task, toggleTask, updateTaskText, deleteTask }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [editedText, setEditedText] = useState(task.text);
+  const [editedText, setEditedText] = useState(task.title);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -26,7 +23,7 @@ const TodoItem: React.FC<TodoItemProps> = ({ task, toggleTask,updateTaskText, de
   };
 
   const handleCancel = () => {
-    setEditedText(task.text);
+    setEditedText(task.title);
     setIsEditing(false);
   };
 
@@ -35,22 +32,22 @@ const TodoItem: React.FC<TodoItemProps> = ({ task, toggleTask,updateTaskText, de
       <label className="checkbox-container">
         <input
           type="checkbox"
-          checked={task.completed}
+          checked={task.isDone}
           onChange={() => toggleTask(task.id)}
         />
         <span className="checkmark"></span>
         {isEditing ? (
           <input
-          type="text"
-          value={editedText}
-          onChange={(e) => setEditedText(e.target.value)}
-          className="edit-input"
-        />
-      ) : (
-        <span className={`task-text ${task.completed ? "completed" : ""}`}>
-          {task.text}
-        </span>
-      )}
+            type="text"
+            value={editedText}
+            onChange={(e) => setEditedText(e.target.value)}
+            className="edit-input"
+          />
+        ) : (
+          <span className={`task-text ${task.isDone ? "completed" : ""}`}>
+            {task.title}
+          </span>
+        )}
       </label>
       <div className="task-actions">
         {isEditing ? (
@@ -85,5 +82,5 @@ const TodoItem: React.FC<TodoItemProps> = ({ task, toggleTask,updateTaskText, de
   );
 };
 
-
 export default TodoItem;
+
