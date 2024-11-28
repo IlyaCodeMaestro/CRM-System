@@ -1,32 +1,32 @@
 import TodoItem from "./TodoItem";
 import "../styles/TodoList.scss";
-
-interface Task {
-  id: number;
-  text: string;
-  completed: boolean;
-}
+import { Todo } from '../types/todo';
 
 interface TodoListProps {
-  tasks: Task[];
+  tasks: Todo[];
+  filter: string;
   toggleTask: (id: number) => void;
   updateTaskText: (id: number, newText: string) => void;
   deleteTask: (id: number) => void;
 }
 
-const TodoList: React.FC<TodoListProps> = ({
-  tasks,
-  toggleTask,
-  updateTaskText,
-  deleteTask,
-}) => {
+const TodoList: React.FC<TodoListProps> = ({ tasks, filter, toggleTask, updateTaskText, deleteTask }) => {
+  const filterTasks = (tasks: Todo[], filter: string) => {
+    if (filter === "Всё") return tasks;
+    if (filter === "В работе") return tasks.filter(task => !task.isDone);
+    if (filter === "Сделано") return tasks.filter(task => task.isDone);
+    return tasks;
+  };
+
+  const filteredTasks = filterTasks(tasks, filter);
+
   return (
     <div className="tasks-list">
-      {tasks.map((task) => (
-        <TodoItem
-          key={task.id}
-          task={task}
-          toggleTask={toggleTask}
+      {filteredTasks.map((task) => (
+        <TodoItem 
+          key={task.id} 
+          task={task} 
+          toggleTask={toggleTask} 
           updateTaskText={updateTaskText}
           deleteTask={deleteTask}
         />
@@ -36,3 +36,4 @@ const TodoList: React.FC<TodoListProps> = ({
 };
 
 export default TodoList;
+
