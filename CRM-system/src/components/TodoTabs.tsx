@@ -4,8 +4,8 @@ import { TodoInfo } from '../types/todo';
 interface TodoTabsProps {
   error: string;
   success: string;
-  filter: string;
-  setFilter: (filter: string) => void;
+  filter: "all" | "completed" | "inWork";
+  setFilter: (filter: "all" |"completed" | "inWork") => void;
   todoInfo: TodoInfo;
 }
 
@@ -16,20 +16,20 @@ const TodoTabs: React.FC<TodoTabsProps> = ({ error, success, filter, setFilter, 
       {success && <div className="success-message">{success}</div>}
       <div className="tabs">
         <button 
-          className={`tab ${filter === "Всё" ? "active" : ""}`}
-          onClick={() => setFilter("Всё")}
+          className={`tab ${filter === "all" ? "active" : ""}`}
+          onClick={() => setFilter("all")}
         >
           Всё ({todoInfo.all})
         </button>
         <button 
-          className={`tab ${filter === "В работе" ? "active" : ""}`}
-          onClick={() => setFilter("В работе")}
+          className={`tab ${filter === "inWork" ? "active" : ""}`}
+          onClick={() => setFilter("inWork")}
         >
-          В работе ({todoInfo.all})
+          В работе ({todoInfo.inWork})
         </button>
         <button 
-          className={`tab ${filter === "Сделано" ? "active" : ""}`}
-          onClick={() => setFilter("Сделано")}
+          className={`tab ${filter === "completed" ? "active" : ""}`}
+          onClick={() => setFilter("completed")}
         >
           Сделано ({todoInfo.completed})
         </button>

@@ -16,50 +16,48 @@ const App = () => {
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [filter, setFilter] = useState("");
+  const [filter, setFilter] = useState<"all" | "completed" | "inWork">("all");
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchTasks();
-  }, []);
+
+    const intervalId = setInterval(() => {
+      fetchTasks();
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [filter]);
 
   const fetchTasks = async () => {
+    setIsLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/todos`);
+      const response = await fetch(`${API_BASE_URL}/todos?filter=${filter}`);
       if (!response.ok) {
         throw new Error("Не удалось загрузить задачи");
       }
       const data: MetaResponse<Todo, TodoInfo> = await response.json();
-      if (Array.isArray(data.data)) {
-        setTasks(data.data);
-      } else if (typeof data.data === "object" && data.data !== null) {
-        setTasks(Object.values(data.data));
-      } else {
-        console.error("Unexpected data structure:", data);
-        setTasks([]);
-      }
-
+      setTasks(data.data);
       if (data.info) {
         setTodoInfo(data.info);
       }
       setIsLoading(false);
     } catch (error) {
-      setError("Ошибка при загрузке задач");
+      showMessage("error", "Ошибка при загрузке задач");
+    } finally {
       setIsLoading(false);
     }
   };
 
   const addTask = async (text: string) => {
     if (text.trim().length < 2 || text.length > 64) {
-      setError("Задача должна содержать от 2 до 64 символов");
-      setSuccess("");
+      showMessage("error", "Задача должна содержать от 2 до 64 символов");
       return;
     }
 
     try {
       const todoRequest: TodoRequest = {
         title: text,
-        isDone: false,
       };
 
       const response = await fetch(`${API_BASE_URL}/todos`, {
@@ -74,28 +72,28 @@ const App = () => {
         throw new Error("Не удалось создать задачу");
       }
 
-      const data: MetaResponse<Todo, TodoInfo> = await response.json();
-      if (Array.isArray(data.data)) {
-        setTasks((prevTasks) => [...prevTasks, ...data.data]);
-      } else if (typeof data.data === "object" && data.data !== null) {
-        setTasks((prevTasks) => [...prevTasks, ...Object.values(data.data)]);
-      } else {
-        console.error("Unexpected data structure:", data);
-      }
-      if (data.info) {
-        setTodoInfo(data.info);
-      }
-      setSuccess("Задача успешно создана в системе");
-      setError("");
+      const newTodo: Todo = await response.json();
+      setTasks((prevTasks) => [...prevTasks, newTodo]);
+      setTodoInfo((prevInfo) => ({
+        ...prevInfo,
+        all: prevInfo.all + 1,
+        inWork: prevInfo.inWork + 1,
+      }));
+      showMessage("success", "Задача успешно обновлена");
     } catch (error) {
-      setError("Ошибка при создании задачи");
+      showMessage("error", "Ошибка при создании задачи");
     }
+  };
+
+  function showMessage(type: "error" | "success", message: string) {
+    if (type === "error") setError(message);
+    if (type === "success") setSuccess(message);
 
     setTimeout(() => {
-      setSuccess("");
-      setError("");
+      if (type === "error") setError("");
+      if (type === "success") setSuccess("");
     }, 2000);
-  };
+  }
 
   const toggleTask = async (id: number) => {
     try {
@@ -118,15 +116,18 @@ const App = () => {
         throw new Error("Не удалось обновить задачу");
       }
 
-      const data: MetaResponse<Todo, TodoInfo> = await response.json();
+      const updatedTodo: Todo = await response.json();
       setTasks((prevTasks) =>
-        prevTasks.map((task) => (task.id === id ? data.data[0] : task))
+        prevTasks.map((task) => (task.id === id ? updatedTodo : task))
       );
-      if (data.info) {
-        setTodoInfo(data.info);
-      }
+      setTodoInfo((prevInfo) => ({
+        ...prevInfo,
+        completed: prevInfo.completed + (updatedTodo.isDone ? 1 : -1),
+        inWork: prevInfo.inWork + (updatedTodo.isDone ? -1 : 1),
+      }));
+      showMessage("success", "Задача успешно обновлена");
     } catch (error) {
-      setError("Ошибка при обновлении задачи");
+      showMessage("error", "Ошибка при обновлении задачи");
     }
   };
 
@@ -137,7 +138,7 @@ const App = () => {
       };
 
       const response = await fetch(`${API_BASE_URL}/todos/${id}`, {
-        method: "UPDATE",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
@@ -148,19 +149,19 @@ const App = () => {
         throw new Error("Не удалось обновить текст задачи");
       }
 
-      const data: MetaResponse<Todo, TodoInfo> = await response.json();
-      setTasks((prevTasks) =>
-        prevTasks.map((task) => (task.id === id ? data.data[0] : task))
-      );
-      if (data.info) {
-        setTodoInfo(data.info);
-      }
+      const updatedTodo: Todo = await response.json();
+      setTasks((prevTasks) => {
+        console.log("updateTaskText3.1");
+        return prevTasks.map((task) => (task.id === id ? updatedTodo : task));
+      });
+      showMessage("success", "Текст задачи успешно обновлён");
     } catch (error) {
-      setError("Ошибка при обновлении текста задачи");
+      showMessage("error", "Ошибка при обновлении текста задачи");
     }
   };
 
   const deleteTask = async (id: number) => {
+    setIsLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/todos/${id}`, {
         method: "DELETE",
@@ -170,13 +171,19 @@ const App = () => {
         throw new Error("Не удалось удалить задачу");
       }
 
-      const data: MetaResponse<Todo, TodoInfo> = await response.json();
+      const deletedTask = tasks.find((task) => task.id === id);
       setTasks((prevTasks) => prevTasks.filter((task) => task.id !== id));
-      if (data.info) {
-        setTodoInfo(data.info);
-      }
+      setTodoInfo((prevInfo) => ({
+        ...prevInfo,
+        all: prevInfo.all - 1,
+        completed: prevInfo.completed - (deletedTask?.isDone ? 1 : 0),
+        inWork: prevInfo.inWork - (deletedTask?.isDone ? 0 : 1),
+      }));
+      showMessage("success", "Задача успешно удалена");
     } catch (error) {
-      setError("Ошибка при удалении задачи");
+      showMessage("error", "Ошибка при удалении задачи");
+    } finally {
+      setIsLoading(false);
     }
   };
 
